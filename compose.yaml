@@ -1,0 +1,21 @@
+  services:
+    postgres:
+      image: postgres:17
+      container_name: flashsale-postgres
+      environment:
+        POSTGRES_DB: flashsale
+        POSTGRES_USER: flashsale_user
+        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      ports:
+        - "5432:5432"
+      volumes:
+        - flashsale_postgres_data:/var/lib/postgresql/data
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U flashsale_user -d flashsale"]
+        interval: 5s
+        timeout: 5s
+        retries: 10
+      restart: unless-stopped
+
+  volumes:
+    flashsale_postgres_data:
