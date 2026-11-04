@@ -1,21 +1,52 @@
-  services:
-    postgres:
-      image: postgres:17
-      container_name: flashsale-postgres
-      environment:
-        POSTGRES_DB: flashsale
-        POSTGRES_USER: flashsale_user
-        POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      ports:
-        - "5432:5432"
-      volumes:
-        - flashsale_postgres_data:/var/lib/postgresql/data
-      healthcheck:
-        test: ["CMD-SHELL", "pg_isready -U flashsale_user -d flashsale"]
-        interval: 5s
-        timeout: 5s
-        retries: 10
-      restart: unless-stopped
+services:
+  postgres:
+    image: postgres:17
+    container_name: flashsale-postgres
+    environment:
+      POSTGRES_DB: flashsale
+      POSTGRES_USER: flashsale_user
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - flashsale_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flashsale_user -d flashsale"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
 
-  volumes:
-    flashsale_postgres_data:
+  app:
+    build: .
+    container_name: flashsale-app
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/flashsale
+    expose:
+      - "8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:alpine
+    container_name: flashsale-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      app:
+        condition: service_healthy
+
+volumes:
+  flashsale_postgres_data:
+
