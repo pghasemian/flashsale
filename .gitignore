@@ -29,3 +29,5 @@ out/
 # Operating system
 .DS_Store
 Thumbs.db
+
+src/main/resources/keys/private.pem
