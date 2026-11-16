@@ -21,18 +21,29 @@ public class OrderService {
         this.orderRepository = orderRepository;
     }
 
-    public List<OrderResponse> getMyOrders(Long userId) {
-        return orderRepository.findByUserId(userId)
-                .stream()
+    public List<OrderResponse> getOrders(Long userId, boolean isAdmin) {
+
+        List<Order> orders = isAdmin
+                ? orderRepository.findAll()
+                : orderRepository.findByUserId(userId);
+
+        return orders.stream()
                 .map(OrderMapper::toResponse)
                 .toList();
     }
 
-    public OrderResponse getMyOrder(Long orderId, Long userId) {
-        Order order = orderRepository.findByIdAndUserId(orderId, userId)
+    public OrderResponse getOrder(
+            Long orderId,
+            Long userId,
+            boolean isAdmin
+    ) {
+        Order order = isAdmin
+                ? orderRepository.findById(orderId)
                 .orElseThrow(() ->
-                        new ResourceNotFoundException("Order not found")
-                );
+                        new ResourceNotFoundException("Order not found"))
+                : orderRepository.findByIdAndUserId(orderId, userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Order not found"));
 
         return OrderMapper.toResponse(order);
     }

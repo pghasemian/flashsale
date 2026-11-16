@@ -1,11 +1,15 @@
+
 package com.flashsale.order.api;
 
 import com.flashsale.dto.order.OrderResponse;
 import com.flashsale.exception.ResourceNotFoundException;
 import com.flashsale.order.application.OrderService;
+import com.flashsale.order.domain.OrderStatus;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -29,19 +33,23 @@ class OrderControllerTest {
     @MockitoBean
     private OrderService orderService;
 
-    @Test
-    void shouldGetMyOrdersSuccessfully() throws Exception {
-
-        OrderResponse order = new OrderResponse(
+    private OrderResponse createOrder() {
+        return new OrderResponse(
                 1L,
                 500L,
-                com.flashsale.order.domain.OrderStatus.PENDING,
+                OrderStatus.PENDING,
                 new BigDecimal("250.00"),
                 Instant.now(),
                 Instant.now()
         );
+    }
 
-        when(orderService.getMyOrders(101L))
+    @Test
+    void shouldGetMyOrdersSuccessfully() throws Exception {
+
+        OrderResponse order = createOrder();
+
+        when(orderService.getOrders(101L, false))
                 .thenReturn(List.of(order));
 
         mockMvc.perform(get("/api/v1/orders")
@@ -54,7 +62,7 @@ class OrderControllerTest {
     @Test
     void shouldReturn404WhenOrderBelongsToAnotherUser() throws Exception {
 
-        when(orderService.getMyOrder(1L, 101L))
+        when(orderService.getOrder(1L, 101L, false))
                 .thenThrow(new ResourceNotFoundException("Order not found"));
 
         mockMvc.perform(get("/api/v1/orders/1")
@@ -76,16 +84,9 @@ class OrderControllerTest {
     @Test
     void shouldGetMyOrderSuccessfully() throws Exception {
 
-        OrderResponse order = new OrderResponse(
-                1L,
-                500L,
-                com.flashsale.order.domain.OrderStatus.PENDING,
-                new BigDecimal("250.00"),
-                Instant.now(),
-                Instant.now()
-        );
+        OrderResponse order = createOrder();
 
-        when(orderService.getMyOrder(1L, 101L))
+        when(orderService.getOrder(1L, 101L, false))
                 .thenReturn(order);
 
         mockMvc.perform(get("/api/v1/orders/1")
@@ -94,5 +95,39 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data.id").value(1))
                 .andExpect(jsonPath("$.data.reservationId").value(500));
+    }
+
+    @Test
+    void shouldAllowAdminToGetAllOrders() throws Exception {
+
+        OrderResponse order = createOrder();
+
+        when(orderService.getOrders(101L, true))
+                .thenReturn(List.of(order));
+
+        mockMvc.perform(get("/api/v1/orders")
+                        .with(jwt()
+                                .jwt(jwt -> jwt.subject("101"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data[0].id").value(1));
+    }
+
+    @Test
+    void shouldAllowAdminToGetAnyOrder() throws Exception {
+
+        OrderResponse order = createOrder();
+
+        when(orderService.getOrder(1L, 101L, true))
+                .thenReturn(order);
+
+        mockMvc.perform(get("/api/v1/orders/1")
+                        .with(jwt()
+                                .jwt(jwt -> jwt.subject("101"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.id").value(1));
     }
 }

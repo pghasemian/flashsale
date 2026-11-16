@@ -1,5 +1,7 @@
+
 package com.flashsale.order.application;
 
+import com.flashsale.dto.order.OrderResponse;
 import com.flashsale.exception.ResourceNotFoundException;
 import com.flashsale.order.domain.Order;
 import com.flashsale.order.domain.OrderStatus;
@@ -39,13 +41,14 @@ class OrderServiceTest {
         when(orderRepository.findByIdAndUserId(1L, 101L))
                 .thenReturn(Optional.of(order));
 
-        var response = orderService.getMyOrder(1L, 101L);
+        var response = orderService.getOrder(1L, 101L, false);
 
         assertEquals(500L, response.reservationId());
         assertEquals(OrderStatus.PENDING, response.status());
         assertEquals(new BigDecimal("250.00"), response.totalAmount());
 
         verify(orderRepository).findByIdAndUserId(1L, 101L);
+        verify(orderRepository, never()).findById(1L);
     }
 
     @Test
@@ -56,7 +59,7 @@ class OrderServiceTest {
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> orderService.getMyOrder(1L, 101L)
+                () -> orderService.getOrder(1L, 101L, false)
         );
 
         verify(orderRepository).findByIdAndUserId(1L, 101L);
@@ -76,13 +79,14 @@ class OrderServiceTest {
         when(orderRepository.findByUserId(101L))
                 .thenReturn(List.of(order1, order2));
 
-        var response = orderService.getMyOrders(101L);
+        var response = orderService.getOrders(101L, false);
 
         assertEquals(2, response.size());
         assertEquals(500L, response.get(0).reservationId());
         assertEquals(501L, response.get(1).reservationId());
 
         verify(orderRepository).findByUserId(101L);
+        verify(orderRepository, never()).findAll();
     }
 
     @Test
@@ -93,9 +97,67 @@ class OrderServiceTest {
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> orderService.getMyOrder(999L, 101L)
+                () -> orderService.getOrder(999L, 101L, false)
         );
 
         verify(orderRepository).findByIdAndUserId(999L, 101L);
+    }
+
+    @Test
+    void shouldAllowAdminToGetAllOrders() {
+
+        Order order1 = Order.create(
+                101L, 500L, new BigDecimal("250.00")
+        );
+
+        Order order2 = Order.create(
+                102L, 501L, new BigDecimal("350.00")
+        );
+
+        when(orderRepository.findAll())
+                .thenReturn(List.of(order1, order2));
+
+        List<OrderResponse> response = orderService.getOrders(101L, true);
+
+        assertEquals(2, response.size());
+        assertEquals(500L, response.get(0).reservationId());
+        assertEquals(501L, response.get(1).reservationId());
+
+        verify(orderRepository).findAll();
+        verify(orderRepository, never()).findByUserId(anyLong());
+    }
+
+    @Test
+    void shouldAllowAdminToGetAnyOrder() {
+
+        Order order = Order.create(
+                102L,
+                500L,
+                new BigDecimal("250.00")
+        );
+
+        when(orderRepository.findById(1L))
+                .thenReturn(Optional.of(order));
+
+        var response = orderService.getOrder(1L, 101L, true);
+
+        assertEquals(500L, response.reservationId());
+
+        verify(orderRepository).findById(1L);
+        verify(orderRepository, never()).findByIdAndUserId(anyLong(), anyLong());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAdminRequestsNonExistingOrder() {
+
+        when(orderRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> orderService.getOrder(999L, 101L, true)
+        );
+
+        verify(orderRepository).findById(999L);
     }
 }
