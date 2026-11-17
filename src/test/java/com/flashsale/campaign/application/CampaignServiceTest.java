@@ -1,4 +1,4 @@
-package com.flashsale.campaign.service;
+package com.flashsale.campaign.application;
 
 import com.flashsale.campaign.domain.Campaign;
 import com.flashsale.campaign.domain.CampaignStatus;

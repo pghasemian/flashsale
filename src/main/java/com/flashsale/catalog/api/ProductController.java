@@ -1,6 +1,6 @@
 package com.flashsale.catalog.api;
 
-import com.flashsale.catalog.service.ProductService;
+import com.flashsale.catalog.application.ProductService;
 import com.flashsale.dto.common.ApiResponse;
 import com.flashsale.dto.common.PageResponse;
 import com.flashsale.dto.product.ProductCreateRequest;

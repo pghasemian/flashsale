@@ -1,4 +1,4 @@
-package com.flashsale.catalog.service;
+package com.flashsale.catalog.application;
 
 import com.flashsale.catalog.domain.Product;
 import com.flashsale.catalog.persistence.ProductRepository;

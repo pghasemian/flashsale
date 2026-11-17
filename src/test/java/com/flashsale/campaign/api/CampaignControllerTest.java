@@ -1,6 +1,6 @@
 package com.flashsale.campaign.api;
 
-import com.flashsale.campaign.service.CampaignService;
+import com.flashsale.campaign.application.CampaignService;
 import com.flashsale.dto.campaign.CampaignCreateRequest;
 import com.flashsale.dto.campaign.CampaignResponse;
 import com.flashsale.dto.campaign.CampaignUpdateRequest;
