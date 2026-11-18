@@ -134,7 +134,7 @@ Therefore, concurrency control is handled by PostgreSQL.
 ## 5. Validation Strategy
 
 The implementation is validated through repository, service, and PostgreSQL-backed integration tests.
-
+The reservation integration tests run against PostgreSQL 17 provisioned through Testcontainers.
 The test scenarios include:
 
 - 100 concurrent requests competing for 10 available units.
