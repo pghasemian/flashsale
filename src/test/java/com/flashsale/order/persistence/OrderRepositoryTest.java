@@ -1,10 +1,10 @@
 
 package com.flashsale.order.persistence;
 
-import com.flashsale.catalog.domain.Product;
-import com.flashsale.catalog.persistence.ProductRepository;
 import com.flashsale.campaign.domain.Campaign;
 import com.flashsale.campaign.persistence.CampaignRepository;
+import com.flashsale.catalog.domain.Product;
+import com.flashsale.catalog.persistence.ProductRepository;
 import com.flashsale.identity.domain.User;
 import com.flashsale.identity.persistence.UserRepository;
 import com.flashsale.inventory.domain.Inventory;
@@ -13,7 +13,6 @@ import com.flashsale.order.domain.Order;
 import com.flashsale.order.domain.OrderStatus;
 import com.flashsale.reservation.domain.Reservation;
 import com.flashsale.reservation.persistence.ReservationRepository;
-
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -155,10 +154,10 @@ class OrderRepositoryTest {
 
         jdbcTemplate.update(
                 """
-                INSERT INTO campaign_products
-                    (campaign_id, product_id, sale_price)
-                VALUES (?, ?, ?)
-                """,
+                        INSERT INTO campaign_products
+                            (campaign_id, product_id, sale_price)
+                        VALUES (?, ?, ?)
+                        """,
                 campaign.getId(),
                 product.getId(),
                 new BigDecimal("49.99")
@@ -177,7 +176,8 @@ class OrderRepositoryTest {
                 campaign.getId(),
                 product.getId(),
                 2,
-                new BigDecimal("49.99")
+                new BigDecimal("49.99"),
+                "test-" + UUID.randomUUID()
         );
 
         return reservationRepository.save(reservation).getId();

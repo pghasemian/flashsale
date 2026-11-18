@@ -185,7 +185,8 @@ class PaymentRepositoryTest {
                 campaign.getId(),
                 product.getId(),
                 2,
-                new BigDecimal("49.99")
+                new BigDecimal("49.99"),
+                "test-" + UUID.randomUUID()
         );
 
         reservation = reservationRepository.save(reservation);

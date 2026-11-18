@@ -35,6 +35,9 @@ public class Reservation {
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
+    @Column(name = "idempotency_key", length = 100, unique = true)
+    private String idempotencyKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -50,7 +53,8 @@ public class Reservation {
             Long campaignId,
             Long productId,
             int quantity,
-            BigDecimal unitPrice
+            BigDecimal unitPrice,
+            String idempotencyKey
     ) {
         Reservation reservation = new Reservation();
 
@@ -61,6 +65,7 @@ public class Reservation {
         reservation.unitPrice = unitPrice;
         reservation.status = ReservationStatus.ACTIVE;
         reservation.expiresAt = Instant.now().plusSeconds(300);
+        reservation.idempotencyKey = idempotencyKey;
 
         return reservation;
     }
@@ -121,5 +126,48 @@ public class Reservation {
 
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public String getIdempotencyKey() {
+        return idempotencyKey;
+    }
+
+    public boolean matchesRequest(
+            Long userId,
+            Long campaignId,
+            Long productId,
+            int quantity) {
+
+        return this.userId.equals(userId)
+                && this.campaignId.equals(campaignId)
+                && this.productId.equals(productId)
+                && this.quantity == quantity;
+    }
+
+    public void confirm() {
+        if (status != ReservationStatus.ACTIVE) {
+            throw new IllegalStateException(
+                    "Only active reservations can be confirmed");
+        }
+
+        status = ReservationStatus.CONFIRMED;
+    }
+
+    public void expire() {
+        if (status != ReservationStatus.ACTIVE) {
+            throw new IllegalStateException(
+                    "Only active reservations can expire");
+        }
+
+        status = ReservationStatus.EXPIRED;
+    }
+
+    public void cancel() {
+        if (status != ReservationStatus.ACTIVE) {
+            throw new IllegalStateException(
+                    "Only active reservations can be cancelled");
+        }
+
+        status = ReservationStatus.CANCELLED;
     }
 }

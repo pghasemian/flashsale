@@ -60,7 +60,8 @@ class ReservationRepositoryTest {
                 campaignId,
                 productId,
                 2,
-                new BigDecimal("49.99")
+                new BigDecimal("49.99"),
+                "test-" + java.util.UUID.randomUUID()
         );
 
         Reservation savedReservation =
@@ -98,7 +99,8 @@ class ReservationRepositoryTest {
                 inventoryIds[0],
                 inventoryIds[1],
                 1,
-                new BigDecimal("25.00")
+                new BigDecimal("25.00"),
+                "test-" + java.util.UUID.randomUUID()
         );
 
         reservationRepository.save(reservation);
